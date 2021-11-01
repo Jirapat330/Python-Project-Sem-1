@@ -1,0 +1,6 @@
+bB - black Bishop
+bK - black King
+bN - black Knight
+bp - black pawn
+bQ - black Queen
+bR - black Rook
