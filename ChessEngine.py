@@ -18,17 +18,22 @@ class GameState():
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
+            ["--", "--", "wR", "--", "--", "bB", "--", "--"],
             ["--", "--", "--", "--", "--", "--", "--", "--"],
             ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-        ]
+            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+        ]                             # map each piece to a given function (dict) to simplify moves logic
+
+        self.moveFunctions = {"p": self.getPawnMoves, "R": self.getRookMoves, "N": self.getKnightMoves,
+                              "B": self.getBishopMoves, "Q": self.getQueenMoves, "K": self.getKingMoves}
+
         self.whiteToMove = True
         self.moveLog = []
 
     """
     Takes a Move as a parameter and executes it (this will not work for castling, pawn promotion and end-passant)
     """
+
     def makeMove(self, move):
         if self.board[move.startRow][move.startCol] != "--":
             self.board[move.startRow][move.startCol] = "--"
@@ -39,47 +44,103 @@ class GameState():
     """
     Undo the last move made
     """
+
     def undoMove(self):
-        if len(self.moveLog) != 0:   # Make sure that there is a move to undo
+        if len(self.moveLog) != 0:  # Make sure that there is a move to undo
             move = self.moveLog.pop()
             self.board[move.startRow][move.startCol] = move.pieceMoved
             self.board[move.endRow][move.endCol] = move.pieceCaptured
-            self.whiteToMove = not self.whiteToMove # switch turns back
+            self.whiteToMove = not self.whiteToMove  # switch turns back
 
     """
     All moves with considering checks
     """
+
     def getValidMoves(self):
         return self.getAllPossibleMoves()
-
-
 
     """
     All moves without considering checks
     """
+
     def getAllPossibleMoves(self):
-        moves = [Move((6,4), (4,4), self.board)]
-        for r in range(len(self.board)):   # number of rows
-            for c in range(len(self.board[r])):    # number of columns in a given row
+        moves = []
+        for r in range(len(self.board)):  # number of rows
+            for c in range(len(self.board[r])):  # number of columns in a given row
                 turn = self.board[r][c][0]
-                if (turn == "w" and self.whiteToMove) and (turn == "b" and not self.whiteToMove):
+                if (turn == "w" and self.whiteToMove) or (turn == "b" and not self.whiteToMove):
                     piece = self.board[r][c][1]
-                    if piece == "p":      # pawn move logic Algorithm
-                        self.getPawnMoves(r, c, moves)
-                    elif piece == "R":
-                        self.getRookMoves(r, c, moves)
+                    self.moveFunctions[piece](r, c, moves) # calls the appropriate move function based on piece types.
         return moves
 
     """
     Get all the Pawn moves for the pawn located at row, column and add these moves to the list
     """
+
     def getPawnMoves(self, r, c, moves):
-        pass
+        if self.whiteToMove:  ######## White pawn moves ############
+            if self.board[r-1][c] == "--":  # 1 square pawn advance
+                moves.append(Move((r, c), (r-1, c), self.board))
+                if r == 6 and self.board[r-2][c] == "--":  # 2 square pawn advance
+                    moves.append(Move((r, c), (r-2, c), self.board))
+
+            if c - 1 >= 0:      # Capture to the left (eats diagonally)
+                if self.board[r-1][c-1][0] == "b":      # enemy piece to capture
+                    moves.append(Move((r, c), (r-1, c-1), self.board))
+
+            if c + 1 <= 7:      # Captures to the right (eats diagonally)
+                if self.board[r-1][c+1][0] == "b":      # enemy piece to capture
+                    moves.append(Move((r, c), (r-1, c+1), self.board))
+
+        else: # black pawn moves
+                if self.board[r + 1][c] == "--":  # 1 square move
+                    moves.append(Move((r, c), (r + 1, c), self.board))
+                    if r == 1 and self.board[r + 2][c] == "--":  # 2 square pawn move
+                        moves.append(Move((r, c), (r + 2, c), self.board))
+
+                if c - 1 >= 0:  # Capture to the left (eats diagonally)
+                    if self.board[r + 1][c - 1][0] == "w":
+                        moves.append(Move((r, c), (r + 1, c - 1), self.board))
+
+                if c + 1 <= 7:  # Captures to the right (eats diagonally)
+                    if self.board[r + 1][c + 1][0] == "w":
+                        moves.append(Move((r, c), (r + 1, c + 1), self.board))
+
+
 
     """
       Get all the Rook moves for the pawn located at row, column and add these moves to the list
     """
+
     def getRookMoves(self, r, c, moves):
+        pass
+
+    """
+      Get all the Knight moves for the pawn located at row, column and add these moves to the list
+    """
+
+    def getKnightMoves(self, r, c, moves):
+        pass
+
+    """
+      Get all the Bishop moves for the pawn located at row, column and add these moves to the list
+    """
+
+    def getBishopMoves(self, r, c, moves):
+        pass
+
+    """
+      Get all the Queen moves for the pawn located at row, column and add these moves to the list
+    """
+
+    def getQueenMoves(self, r, c, moves):
+        pass
+
+    """
+      Get all the King moves for the pawn located at row, column and add these moves to the list
+    """
+
+    def getKingMoves(self, r, c, moves):
         pass
 
 
@@ -102,11 +163,13 @@ class Move():
         self.pieceMoved = board[self.startRow][self.startCol]  # keep track of what pieces are moved
         self.pieceCaptured = board[self.endRow][self.endCol]  # keep track of what pieces are being captured
         self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
-        print(self.moveID)
+
+
     """
     Overriding the equals method
     """
-    def __eq__(self, other):            # comparing objects to the other objects
+
+    def __eq__(self, other):  # comparing objects to the other objects
         if isinstance(other, Move):
             return self.moveID == other.moveID
         return False
