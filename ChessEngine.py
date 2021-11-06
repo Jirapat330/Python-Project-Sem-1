@@ -10,9 +10,10 @@ class GameState():
 
     def __init__(self):  # each list represent a row on the chess board
         # board is an 8x8 2d list, each element of the list has 2 characters
-        # The first character represents the color of the piece, 'b' or 'w'
-        # The second character represents the type of the piece, 'K', 'Q', 'R', 'B', 'N' or 'p'
+        # The first lowercase character represents the color of the piece, 'b' or 'w'
+        # The second uppercase character represents the type of the piece, 'K', 'Q', 'R', 'B', 'N' or 'p'
         # "--" represents an empty space on chess board with no piece.
+        # matrix state: Row (0-7) top to bottom, Column (0-7) Left to Right, start at (0, 0) Top Right corner
         self.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
             ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
@@ -30,37 +31,105 @@ class GameState():
         self.whiteToMove = True
         self.moveLog = []
 
+        #Keeping track of the Kings to make valid move calculation and castling easier.
+        self.whiteKingLocation = (7, 4)
+        self.blackKingLocation = (0, 4)
+
+        #Keep track of checkmate and stalemate
+        self.checkMate = False
+        self.staleMate = False
+
     """
     Takes a Move as a parameter and executes it (this will not work for castling, pawn promotion and end-passant)
     """
 
     def makeMove(self, move):
-        if self.board[move.startRow][move.startCol] != "--":
-            self.board[move.startRow][move.startCol] = "--"
+        if self.board[move.startRow][move.startCol] != "--":  # Empty the start sq
+            self.board[move.startRow][move.startCol] = "--"   # Keep the piece move on the end sq
             self.board[move.endRow][move.endCol] = move.pieceMoved
-            self.moveLog.append(move)  # Log the move so we can undo it later, "Or replay history of game"
-            self.whiteToMove = not self.whiteToMove  # swap players
+            self.moveLog.append(move)  # Log/record the move, "Or replay history of game"
+            self.whiteToMove = not self.whiteToMove  # swap players turn
+            # Update the King's location if moved
+            if move.pieceMoved == "wK":
+                self.whiteKingLocation = (move.endRow, move.endCol)
+            elif move.pieceMoved == "bK":
+                self.blackKingLocation = (move.endRow, move.endCol)
 
     """
     Undo the last move made
     """
 
     def undoMove(self):
-        if len(self.moveLog) != 0:  # Make sure that there is a move to undo
-            move = self.moveLog.pop()
-            self.board[move.startRow][move.startCol] = move.pieceMoved
-            self.board[move.endRow][move.endCol] = move.pieceCaptured
-            self.whiteToMove = not self.whiteToMove  # switch turns back
-
+        if len(self.moveLog) == 0:  # Make sure that there is a move to undo
+            print("Can't UNDO at the start of the game!")
+            return
+        move = self.moveLog.pop()
+        self.board[move.startRow][move.startCol] = move.pieceMoved
+        self.board[move.endRow][move.endCol] = move.pieceCaptured
+        self.whiteToMove = not self.whiteToMove  # switch turns back
+        #Update the KING's Position
+        if move.pieceMoved == "wK":
+            self.whiteKingLocation = (move.startRow, move.startCol)
+        elif move.pieceMoved == "bK":
+            self.blackKingLocation = (move.startRow, move.startCol)
     """
     All moves with considering checks
     """
 
     def getValidMoves(self):
-        return self.getAllPossibleMoves()
+        #1) Get a List of all possible Moves
+        moves = self.getAllPossibleMoves()
+        #2) Make a move from the list of possible moves
+        for i in range(len(moves)-1, -1, -1): # when removing elements from a list go backwards through that list
+            self.makeMove(moves[i])
+            self.whiteToMove = not self.whiteToMove
+        #3) Generate all of the opponents move after making the move in the previous
+        #4) Check if any of the opponents move attacks your king -> if so remove the moves from our list
+            if self.inCheck():
+                moves.remove(moves[i])
+                print("Check White" if self.whiteToMove else "Check Black")
+            self.whiteToMove = not self.whiteToMove
+            self.undoMove()
+        #5) Return the final list of moves
+        if len(moves) == 0:     # either checkmate or stalemate
+            if self.inCheck():
+                print("CHECK MATE! " + ("White" if not self.whiteToMove else "Black") + " wins.")
+                self.checkMate = True
+            else:
+                print("Draw, due to STALEMATE")
+                self.staleMate = True
+
+        else:
+            self.checkMate = False
+            self.staleMate = False
+
+        return moves
 
     """
-    All moves without considering checks
+    Determine if the current player (Check if square (r,c) is under check) is in check.
+    """
+    def inCheck(self):
+        if self.whiteToMove:
+            return self.isUnderAttack(self.whiteKingLocation[0], self.whiteKingLocation[1])
+        else:
+            return self.isUnderAttack(self.blackKingLocation[0], self.blackKingLocation[1])
+
+    """
+    Determine if the enemy can attack the square (r, c). Checks if sq (r,c) is under attack or not.
+    """
+    def isUnderAttack(self, r, c):
+        self.whiteToMove = not self.whiteToMove     # switch to opponent's turn
+        opponentMoves = self.getAllPossibleMoves()  # generate opponents move
+        self.whiteToMove = not self.whiteToMove     # switch turns back
+        for move in opponentMoves:
+            if move.endRow == r and move.endCol == c:  # square under attack
+                return True
+
+        return False
+
+
+    """
+    Get a list of all possible moves, without considering CHECKS.
     """
 
     def getAllPossibleMoves(self):
@@ -74,21 +143,21 @@ class GameState():
         return moves
 
     """
-    Get all the Pawn moves for the pawn located at row, column and add these moves to the list
+    Get all the Pawn moves for the pawn located at (r,c) and add these moves to the list
     """
 
     def getPawnMoves(self, r, c, moves):
-        if self.whiteToMove:  ######## White pawn moves ############
+        if self.whiteToMove:  #------ White pawn moves ------#
             if self.board[r - 1][c] == "--":  # 1 square pawn advance
                 moves.append(Move((r, c), (r - 1, c), self.board))
                 if r == 6 and self.board[r - 2][c] == "--":  # 2 square pawn advance
                     moves.append(Move((r, c), (r - 2, c), self.board))
             # captures
-            if c - 1 >= 0:  # Capture to the left (eats diagonally)
+            if c-1 >= 0:  # Capture to the left (eats diagonally)
                 if self.board[r - 1][c - 1][0] == "b":  # enemy piece to capture
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
 
-            if c + 1 <= 7:  # Captures to the right (eats diagonally)
+            if c+1 <= 7:  # Captures to the right (eats diagonally)
                 if self.board[r - 1][c + 1][0] == "b":  # enemy piece to capture
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
 
@@ -98,11 +167,11 @@ class GameState():
                 if r == 1 and self.board[r + 2][c] == "--":  # 2 square pawn move
                     moves.append(Move((r, c), (r + 2, c), self.board))
             # captures
-            if c - 1 >= 0:  # Capture to the left (eats diagonally)
+            if c-1 >= 0:  # Capture to the left (eats diagonally)
                 if self.board[r + 1][c - 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c - 1), self.board))
 
-            if c + 1 <= 7:  # Captures to the right (eats diagonally)
+            if c+1 <= 7:  # Captures to the right (eats diagonally)
                 if self.board[r + 1][c + 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
         # add pawn promotions later......
@@ -112,6 +181,7 @@ class GameState():
     """
 
     def getRookMoves(self, r, c, moves):
+        # ---- Best way to implement this using coordinates ---- #
         directions = ((-1, 0), (0, -1), (1, 0), (0, 1))  # up, left, down, right | define directions patterns
         enemyColor = "b" if self.whiteToMove else "w"
         for d in directions:
@@ -129,6 +199,7 @@ class GameState():
                         break
                 else:  # off board
                     break
+
 
     """
       Get all the Knight moves for the pawn located at row, column and add these moves to the list

@@ -17,13 +17,14 @@ IMAGES = {}
 """
 Initialize a global dictionary of images. This will be called exactly once in the main
 """
-
+# Manual image load
+# IMAGES["wp"] = p.transform.scale(p.image.load("White piece/wK.png"), (SQ_SIZE, SQ_SIZE))
 
 def loadImages():
     white_chess_pieces = ["wp", "wR", "wN", "wB", "wQ", "wK"]
     for piece in white_chess_pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("White piece/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
-    # Note: access an image by using 'IMAGES['wp']', return wp image. Check draw image not blank
+    # Note: access an image by using 'IMAGES['wp']'-> return white pawn image.
     # Change image directory in 'images/'
 
     black_chess_pieces = ["bp", "bR", "bN", "bB", "bQ", "bK"]
@@ -43,18 +44,17 @@ def images(screen):
 
 
 """
-The main driver for our code. This will handle user input and updating the graphics
+This will be out main driver. This will handle user input and update the graphics
 """
-
+p.init()
 
 ############### add in later, menu, image, displaying move-log on RHS.######################
 def main():
     # p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
-    p.init()
     p.mixer.init()  # Music mixer
     playlist = list()  # Music playlist
-    playlist.append("music/Giorno's Theme in the style of JAZZ.mp3")  # 4
-    playlist.append("music/FKJ - Ylang Ylang.mp3")  # 3
+    playlist.append("music/FKJ - Ylang Ylang.mp3")  # 4
+    playlist.append("music/Giorno's Theme in the style of JAZZ.mp3")  # 3
     # playlist.append("music/FKJ - Die With A Smile.mp3")  # 2
     # playlist.append("music/Wii.mp3")  # 1
     p.mixer.music.load(playlist.pop())  # Get the first track from the playlist
@@ -64,7 +64,7 @@ def main():
     p.mixer.music.play()
     p.event.wait()
 
-    ############# Main Chess Gui : Display screen #################
+    ############# Main Chess ui : Display screen #################
     screen = p.display.set_mode((1000, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
     p.display.set_caption("|ChessM8| Checkmate Chess beta 1.0_by: Jirapat_Wongjaroenrat")
     clock = p.time.Clock()
@@ -82,7 +82,7 @@ def main():
     playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)])
     while running:
         for event in p.event.get():
-            if event.type == p.QUIT:  ###### Event ######
+            if event.type == p.QUIT:  #---- Event -----#
                 running = False
 
             elif event.type == p.USEREVENT:  # A track has ended
@@ -101,16 +101,16 @@ def main():
                     sqSelected = (row, col)
                     playerClicks.append(sqSelected)  # append for both 1st and 2nd clicks
 
-                if len(playerClicks) == 2:  # after 2nd click
-                    move = ChessEngine.Move(playerClicks[0], playerClicks[1], game_state.board)
-                    print(move.GetChessNotation())
-                    if move in validMoves:
-                        game_state.makeMove(move)
-                        moveMade = True
-                        sqSelected = ()  # reset user clicks
-                        playerClicks = []
-                    else:
-                        playerClicks = [sqSelected]
+                    if len(playerClicks) == 2:  # after 2nd click
+                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], game_state.board)
+                        print(move.GetChessNotation())  # print out players move log
+                        if move in validMoves:
+                            game_state.makeMove(move)
+                            moveMade = True
+                            sqSelected = ()  # reset user clicks
+                            playerClicks = []
+                        else:
+                            playerClicks = [sqSelected]
 
             # key handlers
             elif event.type == p.KEYDOWN:
@@ -134,14 +134,14 @@ Responsible for all the graphics within a current game state
 
 ############### add in chess piece highlighting, move suggestions later ####################
 def drawGameState(screen, game_state):
-    drawBoard(screen)  # draw squares on the board
-    drawPieces(screen, game_state.board)  # draw chess pieces on top of those squares
+    drawBoard(screen)  # draw squares on the board (should be called before drawing anything else)
+    drawPieces(screen, game_state.board)  # draw piece on the board
+    # Future Scope: add in piece highlighting or move suggestions
 
 
 """
 Draw the squares on the board. (Top Left square is always white)
 """
-
 
 def drawBoard(screen):  # white (even), r = 2.  black (odd), r = 1
     colors = [p.Color("#E35205"), p.Color("white")]  # KMITL Hex color #E35205, white
