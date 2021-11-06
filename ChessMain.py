@@ -49,22 +49,23 @@ The main driver for our code. This will handle user input and updating the graph
 
 ############### add in later, menu, image, displaying move-log on RHS.######################
 def main():
-    p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
+    # p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
     p.init()
     p.mixer.init()  # Music mixer
     playlist = list()  # Music playlist
     playlist.append("music/Giorno's Theme in the style of JAZZ.mp3")  # 4
     playlist.append("music/FKJ - Ylang Ylang.mp3")  # 3
-    playlist.append("music/FKJ - Die With A Smile.mp3")  # 2
-    playlist.append("music/Wii.mp3")  # 1
+    # playlist.append("music/FKJ - Die With A Smile.mp3")  # 2
+    # playlist.append("music/Wii.mp3")  # 1
     p.mixer.music.load(playlist.pop())  # Get the first track from the playlist
     p.mixer.music.queue(playlist.pop())  # Queue the 2nd song
     p.mixer.music.set_endevent(p.USEREVENT)  # Setup the end track event
+    p.mixer.music.set_volume(0.5)
     p.mixer.music.play()
     p.event.wait()
 
     ############# Main Chess Gui : Display screen #################
-    screen = p.display.set_mode((1000, HEIGHT))  # (0,0) top left >>> (1200,800) bottom right
+    screen = p.display.set_mode((1000, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
     p.display.set_caption("|ChessM8| Checkmate Chess beta 1.0_by: Jirapat_Wongjaroenrat")
     clock = p.time.Clock()
     screen.fill(p.Color("grey"))
@@ -75,7 +76,7 @@ def main():
     loadImages()  # do this once, before while loop
     images(screen)  # load def images, before game loop
 
-    ############# Game loop : Don't touch ##############
+    ############# Game event : Don't touch ##############
     running = True
     sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
     playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)])
@@ -86,7 +87,7 @@ def main():
 
             elif event.type == p.USEREVENT:  # A track has ended
                 if len(playlist) > 0:  # If there are more tracks in the queue...
-                    p.mixer.music.queue(playlist.pop())  # Music playlist queue loop
+                    p.mixer.music.queue(playlist.pop())  # queue next song in list
 
             ########## Mouse Handler: User input ################
             elif event.type == p.MOUSEBUTTONDOWN:
@@ -106,8 +107,10 @@ def main():
                     if move in validMoves:
                         game_state.makeMove(move)
                         moveMade = True
-                    sqSelected = ()  # reset user clicks
-                    playerClicks = []
+                        sqSelected = ()  # reset user clicks
+                        playerClicks = []
+                    else:
+                        playerClicks = [sqSelected]
 
             # key handlers
             elif event.type == p.KEYDOWN:
