@@ -26,6 +26,7 @@ def loadImages():
         IMAGES[piece] = p.transform.scale(p.image.load("White piece/" + piece + ".png"), (SQ_SIZE, SQ_SIZE))
     # Note: access an image by using 'IMAGES['wp']'-> return white pawn image.
     # Change image directory in 'images/'
+    # IMAGES["wp"] = p.transform.scale(p.image.load("White piece/wk.png"), (SQ_SIZE, SQ_SIZE))
 
     black_chess_pieces = ["bp", "bR", "bN", "bB", "bQ", "bK"]
     for piece in black_chess_pieces:
@@ -48,19 +49,20 @@ This will be out main driver. This will handle user input and update the graphic
 """
 p.init()
 
-############### add in later, menu, image, displaying move-log on RHS.######################
+############### This will be out main driver. It will handle user input and update the graphics. Add in later, menu, image, displaying move-log on RHS.######################
 def main():
     # p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
     p.mixer.init()  # Music mixer
     playlist = list()  # Music playlist
-    playlist.append("music/FKJ - Ylang Ylang.mp3")  # 4
-    playlist.append("music/Giorno's Theme in the style of JAZZ.mp3")  # 3
-    # playlist.append("music/FKJ - Die With A Smile.mp3")  # 2
+    playlist.append("music/4. FKJ - Just Piano (mp3cut.net).mp3")  # 5
+    playlist.append("music/3. Giorno's Theme in the style of JAZZ (mp3cut.net).mp3")  # 4
+    playlist.append("music/2. FKJ - Ylang Ylang (mp3cut.net).mp3")  # 3
+    # playlist.append("music/1. FKJ - Die With A Smile (mp3cut.net).mp3")  # 2
     # playlist.append("music/Wii.mp3")  # 1
     p.mixer.music.load(playlist.pop())  # Get the first track from the playlist
     p.mixer.music.queue(playlist.pop())  # Queue the 2nd song
     p.mixer.music.set_endevent(p.USEREVENT)  # Setup the end track event
-    p.mixer.music.set_volume(0.5)
+    p.mixer.music.set_volume(1)
     p.mixer.music.play()
     p.event.wait()
 
@@ -76,7 +78,7 @@ def main():
     loadImages()  # do this once, before while loop
     images(screen)  # load def images, before game loop
 
-    ############# Game event : Don't touch ##############
+    ############# Game driver : Don't touch ##############
     running = True
     sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
     playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)])
@@ -89,27 +91,30 @@ def main():
                 if len(playlist) > 0:  # If there are more tracks in the queue...
                     p.mixer.music.queue(playlist.pop())  # queue next song in list
 
-            ########## Mouse Handler: User input ################
+            ########## Mouse Handlers: User input ################
             elif event.type == p.MOUSEBUTTONDOWN:
                 location = p.mouse.get_pos()  # (x, y) location of mouse
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
+                # if (col >= 8) or col < 0:  # Click out of board (on move log panel) -> do nothing
+                #     continue
                 if sqSelected == (row, col):  # the user clicked the same square twice
                     sqSelected = ()  # deselect
-                    playerClicks = []  # clear player clicks
+                    playerClicks = []  # contains players clicks => [(6,4),(4,4)]  -> pawn at (6,4) moved 2 steps up on (4,4)
                 else:
                     sqSelected = (row, col)
                     playerClicks.append(sqSelected)  # append for both 1st and 2nd clicks
-
+                    # ----- print out players move log-------#
                     if len(playerClicks) == 2:  # after 2nd click
                         move = ChessEngine.Move(playerClicks[0], playerClicks[1], game_state.board)
-                        print(move.GetChessNotation())  # print out players move log
-                        if move in validMoves:
-                            game_state.makeMove(move)
-                            moveMade = True
-                            sqSelected = ()  # reset user clicks
-                            playerClicks = []
-                        else:
+                        print(move.GetChessNotation())
+                        for i in range(len(validMoves)):
+                            if move == validMoves[i]:
+                                game_state.makeMove(validMoves[i])
+                                moveMade = True
+                                sqSelected = ()  # reset user clicks
+                                playerClicks = []
+                        if not moveMade:             # Use if not instead of else: to prevent bugs
                             playerClicks = [sqSelected]
 
             # key handlers
@@ -131,8 +136,8 @@ def main():
 Responsible for all the graphics within a current game state
 """
 
+#---- add in chess piece highlighting, move suggestions later -----#
 
-############### add in chess piece highlighting, move suggestions later ####################
 def drawGameState(screen, game_state):
     drawBoard(screen)  # draw squares on the board (should be called before drawing anything else)
     drawPieces(screen, game_state.board)  # draw piece on the board
