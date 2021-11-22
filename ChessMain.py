@@ -96,8 +96,8 @@ def main():
                 location = p.mouse.get_pos()  # (x, y) location of mouse
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
-                # if (col >= 8) or col < 0:  # Click out of board (on move log panel) -> do nothing
-                #     continue
+                if (col >= 8) or col < 0:  # Click out of board (on move log panel) -> do nothing
+                    continue
                 if sqSelected == (row, col):  # the user clicked the same square twice
                     sqSelected = ()  # deselect
                     playerClicks = []  # contains players clicks => [(6,4),(4,4)]  -> pawn at (6,4) moved 2 steps up on (4,4)
