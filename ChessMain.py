@@ -117,7 +117,7 @@ def main():
                         if not moveMade:             # Use if not instead of else: to prevent bugs
                             playerClicks = [sqSelected]
 
-            # key handlers
+            # ------key handlers------ #
             elif event.type == p.KEYDOWN:
                 if event.key == p.K_z:  # undo when "z" is being pressed
                     game_state.undoMove()
