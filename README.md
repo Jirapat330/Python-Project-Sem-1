@@ -1,4 +1,4 @@
-# Python-Project-Sem-1
+# CheckM8 Chess (Checkmate Chess)
 **Create and developed by Jirapat Wongjaroenrat_64011405**
 
 
