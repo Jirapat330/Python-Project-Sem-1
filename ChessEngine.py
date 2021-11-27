@@ -130,7 +130,7 @@ class GameState():
         self.currentCastlingRights.bks = self.castleRightsLog[-1].bks # update current castling right
         self.currentCastlingRights.bqs = self.castleRightsLog[-1].bqs # update current castling right
 
-        # ----Undo Castle Move---- #
+        # ----Undo Castling Move---- #
         if move.isCastleMove:
             if move.endCol < move.startCol:  # Queen side castle (left)
                 self.board[move.endRow][move.endCol + 1] = "--" # remove rook
@@ -139,11 +139,13 @@ class GameState():
                 self.board[move.endRow][move.endCol - 1] = "--" # remove rook
                 self.board[move.endRow][7] = move.pieceMoved[0] + "R" # replace rook
 
+
     """
     Updating the castle rights given the move >> when it's a Rook or a King Move
     """
 
     def updateCastleRights(self, move):
+        # If King or Rook is Moved
         if move.pieceMoved == "wK":
             self.currentCastlingRights.wqs = False
             self.currentCastlingRights.wks = False
@@ -184,15 +186,17 @@ class GameState():
 
     def getValidMoves(self):
         tempEnpassantPossible = self.enPassantPossible
-        tempCastlingRights = CastleRights(self.currentCastlingRights.wks, self.currentCastlingRights.bks,
-                                          self.currentCastlingRights.wqs, self.currentCastlingRights.bqs) #copy current castling rights
+        tempCastlingRights = self.currentCastlingRights #copy current castling rights
         # 1) Get a List of all possible Moves
         moves = self.getAllPossibleMoves()
-        if self.whiteToMove:
-            self.getCastlingMoves(self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
-        else:
-            self.getCastlingMoves(self.blackKingLocation[0], self.blackKingLocation[1], moves)
-        # 2) Make a move from the list of possible moves
+        currentKingLocation = self.whiteKingLocation if self.whiteToMove else self.blackKingLocation
+        self.getCastlingMoves(currentKingLocation[0], currentKingLocation[1], moves)
+        # if self.whiteToMove:
+        #     self.getCastlingMoves(self.whiteKingLocation[0], self.whiteKingLocation[1], moves)
+        # else:
+        #     self.getCastlingMoves(self.blackKingLocation[0], self.blackKingLocation[1], moves)
+
+        # ----2) Make a move from the list of possible moves---- #
         for i in range(len(moves) - 1, -1, -1):  # when removing elements from a list go backwards through that list
             self.makeMove(moves[i])
             self.whiteToMove = not self.whiteToMove
