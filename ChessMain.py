@@ -5,6 +5,9 @@ and displaying the current Game state
 
 import pygame as p
 from Chess import ChessEngine
+import ChessBot
+
+p.init()
 
 WIDTH = HEIGHT = 800  # 512, 400 another option
 DIMENSION = 8  # dimensions of a chess board are 8x8
@@ -54,7 +57,6 @@ def images(screen):
 """
 This will be out main driver. This will handle user input and update the graphics
 """
-p.init()
 
 
 ############### This will be out main driver. It will handle user input and update the graphics. Add in later, menu, image, displaying move-log on RHS.######################
@@ -82,7 +84,7 @@ def main():
     game_state = ChessEngine.GameState()  # Calls _init_ from ChessEngine
     validMoves = game_state.getValidMoves()
     moveMade = False  # flag variable for when a move is made
-    animate = False # flag variable for when we should animate a move
+    animate = False  # flag variable for when we should animate a move
 
     loadImages()  # do this once, before while loop
     images(screen)  # load def images, before game loop
@@ -91,8 +93,14 @@ def main():
     sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
     playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)])
     gameOver = False
+
+    # ------- Choosing GAME MODE ---------#
+    playerOne = True  # If a Human is playing white, then this will be True. If AI is playing, then this will be False
+    playerTwo = False  # Same as above
+
     ############# Game driver : Don't touch ##############
     while running:
+        humanTurn = (game_state.whiteToMove and playerOne) or (not game_state.whiteToMove and playerTwo)
         for event in p.event.get():
             if event.type == p.QUIT:  # ---- Event -----#
                 running = False
@@ -103,7 +111,7 @@ def main():
 
             ########## Mouse Handlers: User input ################
             elif event.type == p.MOUSEBUTTONDOWN:
-                if not gameOver:
+                if not gameOver and humanTurn:
                     location = p.mouse.get_pos()  # (x, y) location of mouse
                     col = location[0] // SQ_SIZE
                     row = location[1] // SQ_SIZE
@@ -135,13 +143,19 @@ def main():
                     game_state.undoMove()
                     moveMade = True
                     animate = False
-                if event.key == p.K_r: # RESET the board when "R" is pressed
+                if event.key == p.K_r:  # RESET the board when "R" is pressed
                     game_state = ChessEngine.GameState()
                     validMoves = game_state.getValidMoves()
                     sqSelected = ()
                     playerClicks = []
                     moveMade = False
                     animate = False
+        # AI Move finder logic
+        if not gameOver and not humanTurn:
+            AIMove = ChessBot.findRandomMove(validMoves)
+            game_state.makeMove(AIMove)
+            moveMade = True
+            animate = True
 
         if moveMade:
             if animate:
@@ -247,20 +261,22 @@ def animateMoves(move, screen, board, clock):
         drawPieces(screen, board)
         # ---erase the piece moved from its ending square
         color = colors[(move.endRow + move.endCol) % 2]
-        endSquare = p.Rect(move.endCol*SQ_SIZE, move.endRow*SQ_SIZE, SQ_SIZE, SQ_SIZE)
+        endSquare = p.Rect(move.endCol * SQ_SIZE, move.endRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
         p.draw.rect(screen, color, endSquare)
         # ---draw captured piece onto rectangle
         if move.pieceCaptured != "--":
             screen.blit(IMAGES[move.pieceCaptured], endSquare)
         # ---draw moving piece
-        screen.blit(IMAGES[move.pieceMoved], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+        screen.blit(IMAGES[move.pieceMoved], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
         p.display.flip()
         clock.tick(60)
+
 
 def drawText(screen, text):
     font = p.font.SysFont("Helvitca", 70, True, True)
     textObject = font.render(text, 0, p.Color("White"))
-    textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH/2 - textObject.get_width()/2, HEIGHT/2 - textObject.get_height()/2)
+    textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH / 2 - textObject.get_width() / 2,
+                                                    HEIGHT / 2 - textObject.get_height() / 2)
     screen.blit(textObject, textLocation)
     textObject = font.render(text, 0, p.Color("Black"))
     screen.blit(textObject, textLocation.move(2, 2))
