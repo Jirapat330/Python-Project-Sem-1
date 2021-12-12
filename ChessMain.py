@@ -95,12 +95,22 @@ def main():
     gameOver = False
 
     # ------- Choosing GAME MODE ---------#
-    playerOne = True  # If a Human is playing white, then this will be True. If AI is playing, then this will be False
-    playerTwo = False  # Same as above
+    Player_One_Human = True # If a Human is playing white, then this will be True. If AI is playing, then this will be False
+    Player_Two_Human = True  # Same as above
+    # ----------------------------------- #
+    if Player_One_Human and not Player_Two_Human:
+        gameMode(screen, "Player 1 VS Bot")
+    elif Player_Two_Human and not Player_One_Human:
+        gameMode(screen, "Player 2 VS Bot")
+    elif Player_One_Human and Player_Two_Human:
+        gameMode(screen, "Player 1 VS Player 2")
+    else:
+        gameMode(screen, "Bot VS Bot")
 
     ############# Game driver : Don't touch ##############
     while running:
-        humanTurn = (game_state.whiteToMove and playerOne) or (not game_state.whiteToMove and playerTwo)
+        humanTurn = (game_state.whiteToMove and Player_One_Human) or (not game_state.whiteToMove and Player_Two_Human)
+
         for event in p.event.get():
             if event.type == p.QUIT:  # ---- Event -----#
                 running = False
@@ -172,6 +182,7 @@ def main():
                 drawText(screen, "Black wins by checkmate")
             else:
                 drawText(screen, "White wins by checkmate")
+
         elif game_state.stalemate:
             gameOver = True
             drawText(screen, "STALEMATE DRAW")
@@ -287,6 +298,16 @@ def drawText(screen, text):
     font2 = p.font.SysFont("Arial", 30, True, True)
     textObject2 = font2.render("Thanks for playing!!", True, p.Color("Red"))
     screen.blit(textObject2, (302, 472))
+
+
+def gameMode(screen, text):
+    mode = p.font.SysFont("Arial", 20, True, False)
+    textObject3 = mode.render("||-GameMode-||", True, p.Color("Black"))
+    screen.blit(textObject3, (820, 650))
+
+    font3 = p.font.SysFont("Arial", 18, True, False)
+    textObject4 = font3.render(text, True, p.Color("Brown"))
+    screen.blit(textObject4, (825, 680))
 
 
 if __name__ == "__main__":
