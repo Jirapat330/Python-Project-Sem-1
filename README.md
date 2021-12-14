@@ -11,8 +11,7 @@
 
 - 2. ChessEngine.py :     Contains the logic of the Chess game (Using Brute Force Algorithm for calculating valid moves)
 
-- 3. ChessBot.py :      Contains the logic for the AI to play smartly considering captures, defences and positional advantages to some extent. With different methods and   
-                        evaluating moves ahead in depth 
+- 3. ChessBot.py :      Contains the logic for the AI to play smartly considering captures, defences and positional advantages to some extent. With different methods and   evaluating moves ahead in depth 
 
 ## Library to be installed for this Chess engine to work :
 
