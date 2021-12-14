@@ -1,6 +1,10 @@
-bB - black Bishop
-bK - black King
-bN - black Knight
-bp - black pawn
-bQ - black Queen
-bR - black Rook
+bB - black Bishop	75px
+bK - black King	93px
+bN - black Knight	70px
+bp - black pawn      	60px
+bQ - black Queen     	90px
+bR - black Rook	65px
+
+
+###pawn - height ( 60 px)
+###rest - height << (100px)
