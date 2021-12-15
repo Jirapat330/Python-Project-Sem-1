@@ -1,9 +1,6 @@
 """
     This Files contains all the values that you can play with to modify the board.
-    Other BOARD_COLOR_DARK value that you may try : (110, 110, 110) -> grey color
-    Default Chess.com Colors : (235, 235, 208) -> Light || (119, 148, 85) -> Dark
-    (178,135,108)
-    (241,223,197)
+    Currently not in used, since main menu was successfully created
 """
 
 # PLAYER_ONE_HUMAN = True  # Is player1 -> WHITE played by human  || False -> for BOT
