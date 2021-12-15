@@ -35,11 +35,7 @@ clock = p.time.Clock()
 """
 Initialize a global dictionary of images. This will be called exactly once in the main
 """
-
-
-# loading Images .png, own method instead of putting in main. To support picking
-# couple different chess sets options later on.
-
+# loading Images .png, own method instead of putting in main. To support picking couple different chess sets options later on.
 # Manual image load
 # IMAGES["wp"] = p.transform.scale(p.image.load("White piece/wK.png"), (SQ_SIZE, SQ_SIZE))
 
@@ -71,6 +67,13 @@ def images():
 
 """
 This will be out main driver. This will handle user input and update the graphics
+
+Controls: 
+L_Click - moving Chess piece
+R_Click - go back (MainMenu)
+Escape_Esc - go back (MainMenu)
+Key_"r" - Reset Game
+Key_"u" - Undo Move (works for human moves)
 """
 
 
