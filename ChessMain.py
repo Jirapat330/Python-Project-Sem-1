@@ -87,7 +87,7 @@ def main():
     # p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
     playlist = list()  # Music playlist
     playlist.append("music/1. FKJ - Die With A Smile (mp3cut.net).mp3")  # 2
-    playlist.append("music/4. FKJ - Just Piano (mp3cut.net).mp3")  # 5
+    playlist.append("music/4. FKJ - Just Piano (mp3cutnet).mp3")  # 5
     playlist.append("music/2. FKJ - Ylang Ylang (mp3cut.net).mp3")  # 3
     playlist.append("music/3. Giorno's Theme in the style of JAZZ (mp3cut.net).mp3")  # 4
     # playlist.append("music/Wii.mp3")  # 1
