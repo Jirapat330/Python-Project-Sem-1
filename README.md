@@ -18,8 +18,12 @@
 pyGame: pip3 install pygame
 
 ## In-Game User Controls
-L_Click - moving Chess piece
-R_Click - go back (MainMenu)
-Escape_Esc - go back (MainMenu)
-Key_"r" - Reset Game
-Key_"u" - Undo Move (works for human moves)
+**L_Click - moving Chess piece**
+
+**R_Click - Go back (MainMenu)**
+
+**Escape_Esc - Exit Game (MainMenu)**
+
+**Key_"r" - Reset Game**
+
+**Key_"u" - Undo Move (works for human moves)**
