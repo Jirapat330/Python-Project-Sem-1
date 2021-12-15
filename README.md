@@ -16,3 +16,10 @@
 ## Library to be installed for this Chess engine to work :
 
 pyGame: pip3 install pygame
+
+## In-Game User Controls
+L_Click - moving Chess piece
+R_Click - go back (MainMenu)
+Escape_Esc - go back (MainMenu)
+Key_"r" - Reset Game
+Key_"u" - Undo Move (works for human moves)
