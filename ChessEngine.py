@@ -10,9 +10,9 @@ class GameState():
 
     def __init__(self):  # each list represent a row on the chess board
         # board is an 8x8 2d list, each element of the list has 2 characters
-        # The first lowercase character represents the color of the piece, ('b' or 'w')
-        # The second uppercase character represents the type of the piece, ('K', 'Q', 'R', 'B', 'N' or 'p')
-        # "--" represents an empty space on chess board with no piece.
+        # The First lowercase character represents the color of the piece, ('b' or 'w')
+        # The Second uppercase character represents the Type of the piece, ('K', 'Q', 'R', 'B', 'N' or 'p')
+        # "--" represents an Empty space on chess board with no piece.
         # matrix state: Row (0-7) top to bottom, Column (0-7) Left to Right, start at (0, 0) Top Right corner
         self.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
@@ -36,6 +36,8 @@ class GameState():
         self.checkmate = False
         self.stalemate = False
         self.enPassantPossible = ()  # coordinates for the square where en-passant capture is possible
+
+
         # Castling
         self.currentCastlingRights = CastleRights(True, True, True, True)
         # self.castleRightsLog = [self.currentCastlingRights] # this will pose a problem as we are not copying the
@@ -58,21 +60,20 @@ class GameState():
         elif move.pieceMoved == "bK":
             self.blackKingLocation = (move.endRow, move.endCol)
 
-        # ----Update enPassantPossible variable----
-        # if pawn moves twice, next move can capture enpassant
-        if move.pieceMoved[1] == "p" and abs(move.startRow - move.endCol) == 2:  # only on 2 square pawn advance
-            self.enPassantPossible = ((move.startRow + move.endRow)//2, move.startCol)
-        else:
-            self.enPassantPossible = ()
+        # ----Pawn Promotion----#
+        if move.isPawnPromotion:
+            self.board[move.endRow][move.endCol] = move.pieceMoved[0] + "Q"  # Hardcode for now, add options later
 
         # ----En-Passant---- #
         if move.enPassant:
             self.board[move.startRow][move.endCol] = "--"  # Capturing the pawn
 
-        # ----Pawn Promotion----#
-        if move.isPawnPromotion:
-            promotedPiece = "Q" #we can make this part of the ui later
-            self.board[move.endRow][move.endCol] = move.pieceMoved[0] + promotedPiece # Hardcode for now, add options later
+        # ----Update enPassantPossible variable---- #
+        # if pawn moves twice, next move can capture enpassant
+        if move.pieceMoved[1] == "p" and abs(move.startRow - move.endCol) == 2:  # only on 2 square pawn advance
+            self.enPassantPossible = ((move.startRow + move.endRow)//2, move.startCol)
+        else:
+            self.enPassantPossible = ()
 
         # ---Castle Move--- #
         if move.isCastleMove:
@@ -82,6 +83,8 @@ class GameState():
             else:  # King side castle (right)
                 self.board[move.endRow][7] = "--" # erase old rook
                 self.board[move.endRow][move.endCol - 1] = move.pieceMoved[0] + "R" # move the rook
+
+        # self.enPassantPossible.append(self.enPassantPossible)
 
         # ---Update Castling Rights--- #
         self.updateCastleRights(move)
@@ -114,10 +117,10 @@ class GameState():
         if move.enPassant:
             self.board[move.endRow][move.endCol] = "--"  # removes the pawn that was added in the wrong square
             self.board[move.startRow][move.endCol] = move.pieceCaptured # puts the pawn back on the correct square it was captured from
-            self.enPassantPossible = (move.endRow, move.endCol) # allow an en passant to happen on the next move
+            self.enPassantPossible = (move.endRow, move.endCol)
 
-        # Undo a 2 square Pawn advance should make enPassantPossible = () again
-        if move.pieceMoved[1] == "p" and abs(move.startRow - move.endRow) == 2:
+        # UNDO a 2 sq pawn advance
+        if move.pieceMoved[1] == 'P' and abs(move.endRow - move.startRow) == 2:
             self.enPassantPossible = ()
 
         # ---Undo Castling Rights--- #
@@ -215,11 +218,18 @@ class GameState():
         # 5) Return the final list of moves
         if len(moves) == 0:  # either checkmate or stalemate
             if self.inCheck():
-                print("CHECK MATE! " + ("White" if not self.whiteToMove else "Black") + " wins.")
                 self.checkmate = True
+                if self.whiteToMove:
+                    print("CheckM8: Player 2 wins!!")
+                else:
+                    print("CheckM8: Player 1 wins!!")
             else:
-                print("Draw, DUE TO STALEMATE")
                 self.stalemate = True
+                print("DRAW!! Stalemate", end=", ")
+                if self.whiteToMove:
+                    print("White Does Not have Moves")
+                else:
+                    print("Black Does Not have Moves")
         else:
             self.checkmate = False
             self.stalemate = False
@@ -282,13 +292,13 @@ class GameState():
             if c - 1 >= 0:  # Capture to the left (diagonally)
                 if self.board[r - 1][c - 1][0] == "b":  # enemy piece to capture
                     moves.append(Move((r, c), (r - 1, c - 1), self.board))
-                elif (r - 1, c - 1) == self.enPassantPossible:
+                elif self.enPassantPossible == (r - 1, c - 1):
                     moves.append(Move((r, c), (r - 1, c - 1), self.board, enPassant=True))
 
             if c + 1 <= 7:  # Captures to the right (diagonally)
                 if self.board[r - 1][c + 1][0] == "b":  # enemy piece to capture
                     moves.append(Move((r, c), (r - 1, c + 1), self.board))
-                elif (r - 1, c + 1) == self.enPassantPossible:
+                elif self.enPassantPossible == (r - 1, c + 1):
                     moves.append(Move((r, c), (r - 1, c + 1), self.board, enPassant=True))
 
         # -----black pawn moves-----#
@@ -301,13 +311,13 @@ class GameState():
             if c - 1 >= 0:  # Capture to the left (diagonally)
                 if self.board[r + 1][c - 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c - 1), self.board))
-                elif (r + 1, c - 1) == self.enPassantPossible:
+                elif self.enPassantPossible == (r + 1, c - 1):
                     moves.append(Move((r, c), (r + 1, c - 1), self.board, enPassant=True))
 
             if c + 1 <= 7:  # Captures to the right (diagonally)
                 if self.board[r + 1][c + 1][0] == "w":
                     moves.append(Move((r, c), (r + 1, c + 1), self.board))
-                elif (r + 1, c + 1) == self.enPassantPossible:
+                elif self.enPassantPossible == (r + 1, c + 1):
                     moves.append(Move((r, c), (r + 1, c + 1), self.board, enPassant=True))
 
         # add pawn promotions later......
@@ -468,22 +478,11 @@ class Move():
         self.enPassant = enPassant
         if self.enPassant:
             self.pieceCaptured = "bp" if self.pieceMoved == "wp" else "wp" #enpassant captures opposite colored pawn
-        self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
 
         # ---CastleMove--- #
         self.isCastleMove = isCastleMove
 
         self.moveID = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
-
-
-    """
-    Overriding equal to method
-    """
-
-    def __eq__(self, other):  # comparing objects to the other objects
-        if isinstance(other, Move):
-            return self.moveID == other.moveID
-        return False
 
     def GetChessNotation(self):
         # you can add to make this like real chess notation, we will just record the squares in rank/file notation
@@ -491,4 +490,18 @@ class Move():
 
     def GetRankFile(self, r, c):
         return self.colsToFiles[c] + self.rowsToRanks[r]
+
+    """
+    Overriding equal to method
+    """
+
+    def __eq__(self, other):  # comparing objects to the other objects
+        return isinstance(other, Move) and self.moveID == other.moveID
+
+
+
+
+
+
+
 

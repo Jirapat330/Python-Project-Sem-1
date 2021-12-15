@@ -7,34 +7,38 @@ import pygame as p
 import sys
 from Chess import ChessEngine
 import ChessBot
+
 # import Config
 
 p.init()
 p.mixer.init()  # Music mixer
-
+# ------Board dimensions
 WIDTH = HEIGHT = 800  # 512, 400 another option
 DIMENSION = 8  # dimensions of a chess board are 8x8
 SQ_SIZE = HEIGHT // DIMENSION  # 100 x 100px per SQ , Image size <= 100, Canvas size <= 100
 MAX_FPS = 15  # for animations
-IMAGES = {}
+IMAGES = {}  # global dictionary for images
 
 font = p.font.SysFont("Helvitca", 70, True, True)
 font2 = p.font.SysFont("Arial", 30, True, True)
 font3 = p.font.SysFont("constantia", 80, True, True)
 font4 = p.font.SysFont("Helvetica", 30, True, False)
 font5 = p.font.SysFont("Helvetica", 23, True, False)
+moveLogFont = p.font.SysFont("Arial", 12, True, False)
 
 ############# Main Chess ui : Display screen #################
-screen = p.display.set_mode((1000, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
+screen = p.display.set_mode((1060, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
+
 p.display.set_caption("|ChessM8| Checkmate Chess beta 1.0_by: Jirapat_Wongjaroenrat")
 clock = p.time.Clock()
 
-# loading Images .png, own method instead of putting in main. To support picking
-# couple different chess sets options later on.
 """
 Initialize a global dictionary of images. This will be called exactly once in the main
 """
 
+
+# loading Images .png, own method instead of putting in main. To support picking
+# couple different chess sets options later on.
 
 # Manual image load
 # IMAGES["wp"] = p.transform.scale(p.image.load("White piece/wK.png"), (SQ_SIZE, SQ_SIZE))
@@ -55,16 +59,14 @@ def loadImages():
     for piece in black_chess_pieces:
         IMAGES[piece] = p.transform.scale(p.image.load(Player_2 + piece + ".png"),
                                           (SQ_SIZE, SQ_SIZE))  # p.transform.scale(p.image>>>,(SQ_SIZE,SQ_SIZE)
-    # Note: access an image by using 'IMAGES['bp']'
-    # Change image directory in 'images/'
 
 
 def images():
     ############ Load on-screen images ######################
     Kmitl = (p.image.load("Logo/KMITL-GO 200px.png"))
-    screen.blit(Kmitl, (800, 0))
+    screen.blit(Kmitl, (820, 0))
     FE = (p.image.load("Logo/FE Logo fix.png"))
-    screen.blit(FE, (800, 30))
+    screen.blit(FE, (820, 30))
 
 
 """
@@ -80,14 +82,12 @@ This will be out main driver. This will handle user input and update the graphic
 ############### This will be out main driver. It will handle user input and update the graphics. Add in later, menu, image, displaying move-log on RHS.######################
 def main():
     # p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
-
     playlist = list()  # Music playlist
     playlist.append("music/1. FKJ - Die With A Smile (mp3cut.net).mp3")  # 2
     playlist.append("music/4. FKJ - Just Piano (mp3cut.net).mp3")  # 5
     playlist.append("music/2. FKJ - Ylang Ylang (mp3cut.net).mp3")  # 3
     playlist.append("music/3. Giorno's Theme in the style of JAZZ (mp3cut.net).mp3")  # 4
     # playlist.append("music/Wii.mp3")  # 1
-
     p.mixer.music.load(playlist.pop())  # Get the first track from the playlist
     p.mixer.music.queue(playlist.pop())  # Queue the 2nd song
     p.mixer.music.set_endevent(p.USEREVENT)  # Setup the end track event
@@ -107,20 +107,20 @@ def main():
     sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
     playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)])
     gameOver = False
-    # -------GameMode Label----------- #
+    # playerOne = PLAYER_ONE_HUMAN.Config  # Is player1 -> WHITE played by human  || False -> for BOT
+    # playerTwo= PLAYER_TWO_HUMAN.Config  # Is player2 -> BLACK played by human || False -> for BOT
+
+    # -------On-Screen GameMode Label----------- #
     if playerOne and not playerTwo:
-        gameModeLabel("Player 1 VS Bot")
-    elif playerTwo and not playerOne:
-        gameModeLabel("Player 2 VS Bot")
+        gameModeLabel("Player 1 VS AI")
     elif playerOne and playerTwo:
         gameModeLabel("Player 1 VS Player 2")
     else:
-        gameModeLabel("Bot VS Bot")
+        gameModeLabel("AI VS AI")
 
     ############# Game driver : Don't touch ##############
     while running:
         humanTurn = (game_state.whiteToMove and playerOne) or (not game_state.whiteToMove and playerTwo)
-
         for event in p.event.get():
             if event.type == p.QUIT:  # ---- Event -----#
                 running = False
@@ -177,10 +177,11 @@ def main():
                 if event.key == p.K_ESCAPE:
                     main_menu()
 
-            # AI Move finder logic
+        # --------AI Move Algorithm--------- #
+
         if not gameOver and not humanTurn:
             AIMove = ChessBot.findBestMove(game_state, validMoves)
-            if AIMove is None:
+            if AIMove is None:  # If AI can't find any move -> if any move will lead to opponent giving a checkmate.
                 AIMove = ChessBot.findRandomMove(validMoves)
             game_state.makeMove(AIMove)
             moveMade = True
@@ -193,20 +194,37 @@ def main():
             moveMade = False
             animate = False
 
+        drawGameState(game_state, validMoves, sqSelected)
+
+        # Print Checkmate
         if game_state.checkmate:
             gameOver = True
             if game_state.whiteToMove:
-                drawText("Black wins by checkmate")
+                drawEndGameText("Black wins by checkmate")
             else:
-                drawText("White wins by checkmate")
-
-        elif game_state.stalemate:
+                drawEndGameText("White wins by checkmate")
+        # Print Stalemate
+        if game_state.stalemate:
             gameOver = True
-            drawText("STALEMATE DRAW")
+            drawEndGameText("STALEMATE DRAW")
 
-        drawGameState(game_state, validMoves, sqSelected)
         clock.tick(MAX_FPS)
         p.display.flip()
+
+
+
+"""
+Responsible for all the graphics within a current game state
+"""
+
+
+# ---- add in chess piece highlighting, move suggestions later -----#
+
+def drawGameState(game_state, validMoves, sqSelected):
+    drawBoard()  # draw squares on the board (should be called before drawing anything else)
+    highlightSquares(game_state, validMoves, sqSelected)
+    drawPieces(game_state.board)  # draw piece on top of the squares
+    drawMoveLog(game_state)
 
 
 """
@@ -229,20 +247,6 @@ def highlightSquares(game_state, validMoves, sqSelected):
             for move in validMoves:
                 if move.startRow == r and move.startCol == c:
                     screen.blit(s, (move.endCol * SQ_SIZE, move.endRow * SQ_SIZE))
-
-
-#
-"""
-Responsible for all the graphics within a current game state
-"""
-
-
-# ---- add in chess piece highlighting, move suggestions later -----#
-
-def drawGameState(game_state, validMoves, sqSelected):
-    drawBoard()  # draw squares on the board (should be called before drawing anything else)
-    highlightSquares(game_state, validMoves, sqSelected)
-    drawPieces(game_state.board)  # draw piece on top of the squares
 
 
 """
@@ -272,6 +276,40 @@ def drawPieces(board):
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
+def drawMoveLog(game_state):
+    moveLogRect = p.Rect(WIDTH, 200, 260, 550)
+    p.draw.rect(screen, p.Color("brown"), moveLogRect)
+    moveLog = game_state.moveLog
+    moveTexts = []
+    for i in range(0, len(moveLog), 2):
+        moveString = str(i//2 + 1) + "." + moveLog[i].GetChessNotation() + " "
+        if i+1 < len(moveLog): #make sure black made a move
+            moveString += moveLog[i+1].GetChessNotation() + "__"
+        moveTexts.append(moveString)
+
+    movesPerRow = 3
+    horizontalPadding = 5
+    lineSpacing = 7
+    verticalPadding = 5
+    for i in range(0, len(moveTexts), movesPerRow):
+        text = ""
+        for j in range(movesPerRow):
+            if i + j < len(moveTexts):
+                text += moveTexts[i+j]
+        textObject = moveLogFont.render(text, True, p.Color("white"))
+        textLocation = moveLogRect.move(horizontalPadding, verticalPadding)
+        screen.blit(textObject, textLocation)
+        verticalPadding += textObject.get_height() + lineSpacing
+    if game_state.checkmate:
+        textObject = moveLogFont.render("#---CHECKMATE---#", True, p.Color('Red'))
+        textLocation = p.Rect(moveLogRect.move(horizontalPadding, verticalPadding))
+        screen.blit(textObject, textLocation)
+    if game_state.stalemate:
+        textObject = moveLogFont.render("!---STALEMATE---!", True, p.Color('Blue'))
+        textLocation = p.Rect(moveLogRect.move(horizontalPadding, verticalPadding))
+        screen.blit(textObject, textLocation)
+
+
 """
 Animate a move transition between square selected
 """
@@ -295,6 +333,9 @@ def animateMoves(move, board):
 
         # ---draw captured piece onto rectangle
         if move.pieceCaptured != "--":
+            if move.enPassant:
+                enPassantRow = move.endRow + 1 if move.pieceCaptured[0] == "b" else move.endRow - 1
+                endSquare = p.Rect(move.endCol * SQ_SIZE, enPassantRow * SQ_SIZE, SQ_SIZE, SQ_SIZE)
             screen.blit(IMAGES[move.pieceCaptured], endSquare)
 
         # ---draw moving piece
@@ -303,16 +344,16 @@ def animateMoves(move, board):
         clock.tick(60)
 
 
-def drawText(text):
+def drawEndGameText(text):
     textObject = font.render(text, 0, p.Color("White"))
     textLocation = p.Rect(0, 0, WIDTH, HEIGHT).move(WIDTH / 2 - textObject.get_width() / 2,
                                                     HEIGHT / 2 - textObject.get_height() / 2)
     screen.blit(textObject, textLocation)
     textObject = font.render(text, 0, p.Color("Black"))
     screen.blit(textObject, textLocation.move(2, 2))
+
     textObject2 = font2.render("Thanks for playing!!", True, p.Color("Grey"))
     screen.blit(textObject2, (300, 470))
-
     textObject2 = font2.render("Thanks for playing!!", True, p.Color("Red"))
     screen.blit(textObject2, (302, 472))
 
@@ -320,29 +361,27 @@ def drawText(text):
 
 
 def gameModeLabel(text):
-    mode = p.font.SysFont("Arial", 20, True, False)
+    mode = p.font.SysFont("Arial", 18, True, False)
     textObject3 = mode.render("||-GameMode-||", True, p.Color("Black"))
-    screen.blit(textObject3, (820, 650))
+    screen.blit(textObject3, (850, 750))
 
-    label = p.font.SysFont("Arial", 18, True, False)
+    label = p.font.SysFont("Arial", 15, True, False)
     textObject4 = label.render(text, True, p.Color("Brown"))
-    screen.blit(textObject4, (820, 680))
+    screen.blit(textObject4, (860, 780))
 
-
+# if __name__ == "__main__":
+#     main()
 """
 All the functions from here will be responsible for the MainMenu Ui
 """
 
-
-# if __name__ == "__main__":
-#     main()
 def color_options():
     global Player_1, Player_2
     while True:
         screen.fill(p.Color("grey"))
         Chess = (p.image.load("Logo/Chess-Wallpaper2.png"))
-        screen.blit(Chess, (-40, 0))
-# --------Chess Piece Color options------- #
+        screen.blit(Chess, (-40, -5))
+        # --------Chess Piece Color options------- #
         title = font4.render("Chess Pieces Color", True, p.Color("Brown"))
         screen.blit(title, (63, 500))
         title = font4.render("Chess Pieces Color", True, p.Color("White"))
@@ -363,8 +402,10 @@ def color_options():
         p.draw.rect(screen, p.Color("#fc9003"), ((70, 720), (150, 60)))  # screen, color, (x,y location), (size)
         play2 = font5.render("White piece", True, p.Color("Black"))
         screen.blit(play2, (77, 735))
+        play3 = font5.render("(default)", True, p.Color("White"))
+        screen.blit(play3, (230, 735))
 
-# ------Current Blank buttons------ #
+        # ------Current Blank buttons------ #
         title = font3.render("Game Modes", True, p.Color("White"))
         screen.blit(title, (100, 50))
         title = font3.render("Game Modes", True, p.Color("Black"))
@@ -399,9 +440,10 @@ def color_options():
                     game_mode()
                 if 70 <= x <= 220 and 720 <= y <= 800:
                     Player_1 = "White piece/"
-                    Player_2 = "Gold piece2/"
+                    Player_2 = "Black piece/"
                     game_mode()
         p.display.update()
+
 
 def game_mode():
     # -------Choose GameMode menu-------- #
@@ -409,7 +451,7 @@ def game_mode():
     while True:
         screen.fill(p.Color("grey"))
         Chess = (p.image.load("Logo/Chess-Wallpaper2.png"))
-        screen.blit(Chess, (-40, 0))
+        screen.blit(Chess, (-40, -5))
 
         title = font3.render("Game Modes", True, p.Color("White"))
         screen.blit(title, (100, 50))
@@ -505,7 +547,8 @@ def credit():
         detail2 = font5.render("Engineering Programs(SIIE), KMITL.", True, p.Color("White"))
         screen.blit(detail2, (188, 620))
 
-        detail2 = font5.render("This program is a part of 01006813 INTRODUCTION TO PROGRAMMING - Semester 1/2021", True, p.Color("White"))
+        detail2 = font5.render("This program is a part of 01006813 INTRODUCTION TO PROGRAMMING - Semester 1/2021", True,
+                               p.Color("White"))
         screen.blit(detail2, (10, 740))
 
         for event in p.event.get():
@@ -528,7 +571,7 @@ def main_menu():
     while True:
         screen.fill(p.Color("grey"))
         Chess = (p.image.load("Logo/Chess-Wallpaper2.png"))
-        screen.blit(Chess, (-40, 0))
+        screen.blit(Chess, (-40, -5))
         title = font.render("|ChessM8| Checkmate", True, p.Color("White"))
         screen.blit(title, (103, 100))
         textObject = font.render("|ChessM8| Checkmate", True, p.Color("Black"))
@@ -540,11 +583,11 @@ def main_menu():
         knight = (p.image.load("White piece/wN 1.png"))
         screen.blit(knight, (300, 140))
 
-#---- Click and calls color options >>> game_mode ----#
+        # ---- Click and calls color options >>> game_mode ----#
         p.draw.rect(screen, p.Color("#fc9003"), ((440, 250), (200, 80)))  # screen, color, (x,y location), (size)
         play = font2.render("Play Game", True, (255, 255, 255))
         screen.blit(play, (460, 270))
-# ---- Click and calls credits ----#
+        # ---- Click and calls credits ----#
         p.draw.rect(screen, p.Color("#fc9003"), ((450, 350), (180, 80)))  # screen, color, (x,y location), (size)
         credits_ = font2.render("Credits", True, (255, 255, 255))
         screen.blit(credits_, (480, 370))
