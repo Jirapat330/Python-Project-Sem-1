@@ -5,14 +5,13 @@ and displaying the current Game state
 
 import pygame as p
 import sys
-from Chess import ChessEngine
+import ChessEngine
 import ChessBot
-
 # import Config
 
 p.init()
 p.mixer.init()  # Music mixer
-# ------Board dimensions
+# ------Board dimensions------- #
 WIDTH = HEIGHT = 800  # 512, 400 another option
 DIMENSION = 8  # dimensions of a chess board are 8x8
 SQ_SIZE = HEIGHT // DIMENSION  # 100 x 100px per SQ , Image size <= 100, Canvas size <= 100
@@ -28,13 +27,14 @@ moveLogFont = p.font.SysFont("Arial", 12, True, False)
 
 ############# Main Chess ui : Display screen #################
 screen = p.display.set_mode((1060, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
-
 p.display.set_caption("|ChessM8| Checkmate Chess beta 1.0_by: Jirapat_Wongjaroenrat")
 clock = p.time.Clock()
 
 """
 Initialize a global dictionary of images. This will be called exactly once in the main
 """
+
+
 # loading Images .png, own method instead of putting in main. To support picking couple different chess sets options later on.
 # Manual image load
 # IMAGES["wp"] = p.transform.scale(p.image.load("White piece/wK.png"), (SQ_SIZE, SQ_SIZE))
@@ -78,8 +78,8 @@ Key_"u" - Undo Move (works for human moves)
 
 
 # ------- Choosing GAME MODE ---------#
-# playerOne = Config.PLAYER_ONE_HUMAN  # If a Human is playing white, then this will be True.
-# playerTwo = Config.PLAYER_TWO_HUMAN  # If AI is playing, then this will be False
+# playerOne = Config.PLAYER_ONE_HUMAN  # Is player1 -> WHITE played by human  || False -> for BOT
+# playerTwo = Config.PLAYER_TWO_HUMAN  # Is player2 -> BLACK played by human || False -> for BOT
 
 
 ############### This will be out main driver. It will handle user input and update the graphics. Add in later, menu, image, displaying move-log on RHS.######################
@@ -108,8 +108,8 @@ def main():
 
     running = True
     sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
-    playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)])
-    gameOver = False
+    playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)]) -> pawn at (6,4) moved 2 steps up on (4,4)
+    gameOver = False  # True in case of Checkmate and Stalemate
     # playerOne = PLAYER_ONE_HUMAN.Config  # Is player1 -> WHITE played by human  || False -> for BOT
     # playerTwo= PLAYER_TWO_HUMAN.Config  # Is player2 -> BLACK played by human || False -> for BOT
 
@@ -124,8 +124,9 @@ def main():
     ############# Game driver : Don't touch ##############
     while running:
         humanTurn = (game_state.whiteToMove and playerOne) or (not game_state.whiteToMove and playerTwo)
+        # ---- Main Event -----#
         for event in p.event.get():
-            if event.type == p.QUIT:  # ---- Event -----#
+            if event.type == p.QUIT:
                 running = False
                 sys.exit()
 
@@ -215,7 +216,6 @@ def main():
         p.display.flip()
 
 
-
 """
 Responsible for all the graphics within a current game state
 """
@@ -229,27 +229,6 @@ def drawGameState(game_state, validMoves, sqSelected):
     drawPieces(game_state.board)  # draw piece on top of the squares
     drawMoveLog(game_state)
 
-
-"""
-Highlight square selected and moves for piece selected
-"""
-
-
-def highlightSquares(game_state, validMoves, sqSelected):
-    if sqSelected != ():
-        r, c = sqSelected
-        # sqSelected is a piece that can be moved
-        if game_state.board[r][c][0] == ("w" if game_state.whiteToMove else "b"):
-            # highlight selected square
-            s = p.Surface((SQ_SIZE, SQ_SIZE))
-            s.set_alpha(220)  # transparency value -> 0 transparent; 255 opaque
-            s.fill(p.Color("blue"))
-            screen.blit(s, (c * SQ_SIZE, r * SQ_SIZE))
-            # highlight moves from that square
-            s.fill(p.Color("yellow"))
-            for move in validMoves:
-                if move.startRow == r and move.startCol == c:
-                    screen.blit(s, (move.endCol * SQ_SIZE, move.endRow * SQ_SIZE))
 
 
 """
@@ -267,7 +246,30 @@ def drawBoard():  # white (even), r = 2.  black (odd), r = 1
 
 
 """
-Draw the pieces on the board using the current GameState.board
+Highlight square selected and moves for piece selected
+"""
+
+
+def highlightSquares(game_state, validMoves, sqSelected):
+    if sqSelected != ():
+        r, c = sqSelected
+        # sqSelected is a piece that can be moved
+        if game_state.board[r][c][0] == ("w" if game_state.whiteToMove else "b"):
+            # highlight selected square
+            s = p.Surface((SQ_SIZE, SQ_SIZE))
+            s.set_alpha(220)  # transparency value -> 0 transparent; 255 opaque
+            s.fill(p.Color("blue"))
+            screen.blit(s, (c * SQ_SIZE, r * SQ_SIZE))
+
+            # highlight moves from that square
+            s.fill(p.Color("yellow"))
+            for move in validMoves:
+                if move.startRow == r and move.startCol == c:
+                    screen.blit(s, (move.endCol * SQ_SIZE, move.endRow * SQ_SIZE))
+
+
+"""
+Draw the pieces on the board using the current ChessEngine.GameState.board
 """
 
 
@@ -279,15 +281,20 @@ def drawPieces(board):
                 screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
+"""
+Draw Move Log
+"""
+
+
 def drawMoveLog(game_state):
     moveLogRect = p.Rect(WIDTH, 200, 260, 550)
     p.draw.rect(screen, p.Color("brown"), moveLogRect)
     moveLog = game_state.moveLog
     moveTexts = []
     for i in range(0, len(moveLog), 2):
-        moveString = str(i//2 + 1) + "." + moveLog[i].GetChessNotation() + " "
-        if i+1 < len(moveLog): #make sure black made a move
-            moveString += moveLog[i+1].GetChessNotation() + "__"
+        moveString = str(i // 2 + 1) + "." + moveLog[i].GetChessNotation() + " "
+        if i + 1 < len(moveLog):  # make sure black made a move
+            moveString += moveLog[i + 1].GetChessNotation() + "__"
         moveTexts.append(moveString)
 
     movesPerRow = 3
@@ -298,7 +305,7 @@ def drawMoveLog(game_state):
         text = ""
         for j in range(movesPerRow):
             if i + j < len(moveTexts):
-                text += moveTexts[i+j]
+                text += moveTexts[i + j]
         textObject = moveLogFont.render(text, True, p.Color("white"))
         textLocation = moveLogRect.move(horizontalPadding, verticalPadding)
         screen.blit(textObject, textLocation)
@@ -314,7 +321,7 @@ def drawMoveLog(game_state):
 
 
 """
-Animate a move transition between square selected
+Animate a move transition between square selected pieces
 """
 
 
@@ -372,11 +379,13 @@ def gameModeLabel(text):
     textObject4 = label.render(text, True, p.Color("Brown"))
     screen.blit(textObject4, (860, 780))
 
+
 # if __name__ == "__main__":
 #     main()
 """
 All the functions from here will be responsible for the MainMenu Ui
 """
+
 
 def color_options():
     global Player_1, Player_2
@@ -542,9 +551,9 @@ def credit():
         special = font4.render("Special Thanks:", True, p.Color("grey"))
         screen.blit(special, (120, 450))
         detail2 = font5.render("Mr. Eddie Sharick, Computer Science & Physics Teacher", True, p.Color("White"))
-        screen.blit(detail2, (188, 500))
-        detail2 = font5.render("Dr. Natthapong Jungteerapanich, Instructor", True, p.Color("White"))
         screen.blit(detail2, (188, 550))
+        detail2 = font5.render("Dr. Natthapong Jungteerapanich, Instructor", True, p.Color("White"))
+        screen.blit(detail2, (188, 500))
         detail2 = font5.render("School of International & Interdisciplinary", True, p.Color("White"))
         screen.blit(detail2, (188, 600))
         detail2 = font5.render("Engineering Programs(SIIE), KMITL.", True, p.Color("White"))

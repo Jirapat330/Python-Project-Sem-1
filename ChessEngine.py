@@ -32,16 +32,16 @@ class GameState():
         # Keeping track of the Kings to make valid move calculation and castling easier.
         self.whiteKingLocation = (7, 4)
         self.blackKingLocation = (0, 4)
+
         # Keep track of checkmate and stalemate
         self.checkmate = False
         self.stalemate = False
+
         self.enPassantPossible = ()  # coordinates for the square where en-passant capture is possible
 
 
         # Castling
         self.currentCastlingRights = CastleRights(True, True, True, True)
-        # self.castleRightsLog = [self.currentCastlingRights] # this will pose a problem as we are not copying the
-        # self.currentCastlingRights object we are just storing another reference to it.
         self.castleRightsLog = [CastleRights(self.currentCastlingRights.wks, self.currentCastlingRights.wqs,
                                              self.currentCastlingRights.bks, self.currentCastlingRights.bqs)]
 
@@ -462,7 +462,7 @@ class Move():
                    "e": 4, "f": 5, "g": 6, "h": 7}
     colsToFiles = {v: k for k, v in filesToCols.items()}
 
-    def __init__(self, startSq, endSq, board, enPassant=False, pawnPromotion=False, isCastleMove=False):
+    def __init__(self, startSq, endSq, board, enPassant=False, isCastleMove=False):
         self.startRow = startSq[0]
         self.startCol = startSq[1]
         self.endRow = endSq[0]
@@ -471,7 +471,6 @@ class Move():
         self.pieceCaptured = board[self.endRow][self.endCol]  # keep track of what pieces was captured, can be '--' > no piece was captured
 
         # ----Pawn Promotion----#
-        self.pawnPromotion = pawnPromotion
         self.isPawnPromotion = (self.pieceMoved == "wp" and self.endRow == 0) or (self.pieceMoved == "bP" and self.endRow == 7)
 
         # ---En-Passant--- #
