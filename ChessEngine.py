@@ -307,6 +307,7 @@ class GameState():
                 moves.append(Move((r, c), (r + 1, c), self.board))
                 if r == 1 and self.board[r + 2][c] == "--":  # 2 square pawn move
                     moves.append(Move((r, c), (r + 2, c), self.board))
+
             # captures
             if c - 1 >= 0:  # Capture to the left (diagonally)
                 if self.board[r + 1][c - 1][0] == "w":
@@ -471,7 +472,7 @@ class Move():
         self.pieceCaptured = board[self.endRow][self.endCol]  # keep track of what pieces was captured, can be '--' > no piece was captured
 
         # ----Pawn Promotion----#
-        self.isPawnPromotion = (self.pieceMoved == "wp" and self.endRow == 0) or (self.pieceMoved == "bP" and self.endRow == 7)
+        self.isPawnPromotion = (self.pieceMoved == "wp" and self.endRow == 0) or (self.pieceMoved == "bp" and self.endRow == 7)
 
         # ---En-Passant--- #
         self.enPassant = enPassant
