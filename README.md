@@ -22,7 +22,7 @@ pyGame: pip3 install pygame
 
 **R_Click - Go back (MainMenu)**
 
-**Escape_Esc - Exit Game (MainMenu)**
+**Escape_Esc - Go back (MainMenu)**
 
 **Key_"r" - Reset Game**
 
