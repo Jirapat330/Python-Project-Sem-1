@@ -7,6 +7,7 @@ import pygame as p
 import sys
 import ChessEngine
 import ChessBot
+
 # import Config
 
 p.init()
@@ -86,11 +87,11 @@ Key_"u" - Undo Move (works for human moves)
 def main():
     # p.mixer.pre_init(44100, -16, 2, 2048)  # setup mixer to avoid sound lag
     playlist = list()  # Music playlist
-    playlist.append("music/1. FKJ - Die With A Smile (mp3cut.net).mp3")  # 2
-    playlist.append("music/4. FKJ - Just Piano (mp3cutnet).mp3")  # 5
-    playlist.append("music/2. FKJ - Ylang Ylang (mp3cut.net).mp3")  # 3
-    playlist.append("music/3. Giorno's Theme in the style of JAZZ (mp3cut.net).mp3")  # 4
-    # playlist.append("music/Wii.mp3")  # 1
+    playlist.append("music/1. FKJ - Die With A Smile (mp3cut.net).mp3")  # 4
+    playlist.append("music/4. FKJ - Just Piano (mp3cutnet).mp3")  # 3
+    playlist.append("music/2. FKJ - Ylang Ylang (mp3cut.net).mp3")  # 2
+    playlist.append("music/3. Giorno's Theme in the style of JAZZ (mp3cut.net).mp3")  # 1
+
     p.mixer.music.load(playlist.pop())  # Get the first track from the playlist
     p.mixer.music.queue(playlist.pop())  # Queue the 2nd song
     p.mixer.music.set_endevent(p.USEREVENT)  # Setup the end track event
@@ -110,8 +111,9 @@ def main():
     sqSelected = ()  # no square is selected, keep track of the last click of the user (tuple: (row, col))
     playerClicks = []  # keep track of player clicks (two tuples: [(6, 4), (4, 4)]) -> pawn at (6,4) moved 2 steps up on (4,4)
     gameOver = False  # True in case of Checkmate and Stalemate
-    # playerOne = PLAYER_ONE_HUMAN.Config  # Is player1 -> WHITE played by human  || False -> for BOT
-    # playerTwo= PLAYER_TWO_HUMAN.Config  # Is player2 -> BLACK played by human || False -> for BOT
+
+    # playerOne = True  # Is player1 -> WHITE played by human  || False -> for BOT
+    # playerTwo= True  # Is player2 -> BLACK played by human || False -> for BOT
 
     # -------On-Screen GameMode Label----------- #
     if playerOne and not playerTwo:
@@ -184,12 +186,29 @@ def main():
         # --------AI Move Algorithm--------- #
 
         if not gameOver and not humanTurn:
-            AIMove = ChessBot.findBestMove(game_state, validMoves)
-            if AIMove is None:  # If AI can't find any move -> if any move will lead to opponent giving a checkmate.
-                AIMove = ChessBot.findRandomMove(validMoves)
-            game_state.makeMove(AIMove)
-            moveMade = True
-            animate = True
+            if Easy:
+                AIMove = ChessBot.findBestMove(game_state, validMoves)
+                if AIMove is None:  # If AI can't find any move -> if any move will lead to opponent giving a checkmate.
+                    AIMove = ChessBot.findRandomMove(validMoves)
+                game_state.makeMove(AIMove)
+                moveMade = True
+                animate = True
+
+            if Medium:
+                AIMove = ChessBot.findBestMoveMedium(game_state, validMoves)
+                if AIMove is None:  # If AI can't find any move -> if any move will lead to opponent giving a checkmate.
+                    AIMove = ChessBot.findRandomMove(validMoves)
+                game_state.makeMove(AIMove)
+                moveMade = True
+                animate = True
+
+            if Hard:
+                AIMove = ChessBot.findBestMoveHard(game_state, validMoves)
+                if AIMove is None:  # If AI can't find any move -> if any move will lead to opponent giving a checkmate.
+                    AIMove = ChessBot.findRandomMove(validMoves)
+                game_state.makeMove(AIMove)
+                moveMade = True
+                animate = True
 
         if moveMade:
             if animate:
@@ -228,7 +247,6 @@ def drawGameState(game_state, validMoves, sqSelected):
     highlightSquares(game_state, validMoves, sqSelected)
     drawPieces(game_state.board)  # draw piece on top of the squares
     drawMoveLog(game_state)
-
 
 
 """
@@ -387,6 +405,120 @@ All the functions from here will be responsible for the MainMenu Ui
 """
 
 
+def AiDifficulty():
+    global Easy, Medium, Hard
+    while True:
+        screen.fill(p.Color("grey"))
+        Chess = (p.image.load("Logo/Chess-Wallpaper.png"))
+        screen.blit(Chess, (-320, -280))
+
+        title = font3.render("AI difficulty", True, p.Color("White"))
+        screen.blit(title, (100, 50))
+        title = font3.render("AI difficulty", True, p.Color("Black"))
+        screen.blit(title, (102, 50))
+
+        step2 = font.render("Step 3:", True, p.Color("#fc9003"))
+        screen.blit(step2, (460, 150))
+        p.draw.rect(screen, p.Color("#fc9003"), ((415, 200), (270, 100)))  # screen, color, (x,y location), (size)
+        play1 = font2.render("Easy", True, (255, 255, 255))
+        screen.blit(play1, (470, 233))
+
+        p.draw.rect(screen, p.Color("#fc9003"), ((415, 350), (270, 100)))  # screen, color, (x,y location), (size)
+        play1 = font2.render("Intermediate", True, (255, 255, 255))
+        screen.blit(play1, (470, 380))
+
+        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (290, 100)))  # screen, color, (x,y location), (size)
+        play1 = font2.render("Expert", True, (255, 255, 255))
+        screen.blit(play1, (470, 533))
+
+        for event in p.event.get():
+            if event.type == p.QUIT:
+                sys.exit()
+            elif event.type == p.MOUSEBUTTONDOWN and event.button == 3:
+                color_options()
+            elif event.type == p.KEYDOWN and p.K_ESCAPE:
+                color_options()
+
+            elif event.type == p.MOUSEBUTTONDOWN and event.button == 1:
+                x, y = event.pos
+                if 415 <= x <= 685 and 200 <= y <= 300:
+                    Easy = True
+                    Medium = False
+                    Hard = False
+                    main()
+
+                if 415 <= x <= 685 and 350 <= y <= 450:
+                    Easy = False
+                    Medium = True
+                    Hard = False
+                    main()
+
+                if 410 <= x <= 700 and 500 <= y <= 600:
+                    Easy = False
+                    Medium = False
+                    Hard = True
+                    main()
+
+        p.display.update()
+
+
+def game_mode():
+    # -------Choose GameMode menu-------- #
+    global playerOne, playerTwo
+    while True:
+        screen.fill(p.Color("grey"))
+        Chess = (p.image.load("Logo/Chess-Wallpaper2.png"))
+        screen.blit(Chess, (-40, -5))
+
+        title = font3.render("Game Modes", True, p.Color("White"))
+        screen.blit(title, (100, 50))
+        title = font3.render("Game Modes", True, p.Color("Black"))
+        screen.blit(title, (102, 50))
+
+        step2 = font.render("Step 2:", True, p.Color("#fc9003"))
+        screen.blit(step2, (460, 150))
+        p.draw.rect(screen, p.Color("#fc9003"), ((415, 200), (270, 100)))  # screen, color, (x,y location), (size)
+        play1 = font2.render("Player vs AI", True, (255, 255, 255))
+        screen.blit(play1, (460, 233))
+
+        p.draw.rect(screen, p.Color("#fc9003"), ((415, 350), (270, 100)))  # screen, color, (x,y location), (size)
+        play1 = font2.render("AI vs AI", True, (255, 255, 255))
+        screen.blit(play1, (490, 380))
+
+        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (290, 100)))  # screen, color, (x,y location), (size)
+        play1 = font2.render("Player1 vs Player2", True, (255, 255, 255))
+        screen.blit(play1, (420, 533))
+
+        for event in p.event.get():
+            if event.type == p.QUIT:
+                sys.exit()
+            elif event.type == p.MOUSEBUTTONDOWN and event.button == 3:
+                main_menu()
+            elif event.type == p.KEYDOWN and p.K_ESCAPE:
+                main_menu()
+
+            elif event.type == p.MOUSEBUTTONDOWN and event.button == 1:
+                x, y = event.pos
+                if 415 <= x <= 685 and 200 <= y <= 300:
+                    playerOne = True  # If a Human is playing white, then this will be True.
+                    playerTwo = False  # If AI is playing, then this will be False
+                    AiDifficulty()
+                    # main()
+
+                if 415 <= x <= 685 and 350 <= y <= 450:  # AI vs AI
+                    playerOne = False  # If a Human is playing white, then this will be True.
+                    playerTwo = False  # If AI is playing, then this will be False
+                    AiDifficulty()
+                    # main()
+
+                if 410 <= x <= 700 and 500 <= y <= 600:
+                    playerOne = True  # If a Human is playing white, then this will be True.
+                    playerTwo = True  # If AI is playing, then this will be False
+                    main()
+
+        p.display.update()
+
+
 def color_options():
     global Player_1, Player_2
     while True:
@@ -454,76 +586,6 @@ def color_options():
                     Player_1 = "White piece/"
                     Player_2 = "Black piece/"
                     game_mode()
-        p.display.update()
-
-
-def game_mode():
-    # -------Choose GameMode menu-------- #
-    global playerOne, playerTwo
-    while True:
-        screen.fill(p.Color("grey"))
-        Chess = (p.image.load("Logo/Chess-Wallpaper2.png"))
-        screen.blit(Chess, (-40, -5))
-
-        title = font3.render("Game Modes", True, p.Color("White"))
-        screen.blit(title, (100, 50))
-        title = font3.render("Game Modes", True, p.Color("Black"))
-        screen.blit(title, (102, 50))
-
-        step2 = font.render("Step 2:", True, p.Color("#fc9003"))
-        screen.blit(step2, (460, 150))
-        p.draw.rect(screen, p.Color("#fc9003"), ((415, 200), (270, 100)))  # screen, color, (x,y location), (size)
-        play1 = font2.render("Player vs AI", True, (255, 255, 255))
-        screen.blit(play1, (460, 233))
-
-        p.draw.rect(screen, p.Color("#fc9003"), ((415, 350), (270, 100)))  # screen, color, (x,y location), (size)
-        play1 = font2.render("AI vs AI", True, (255, 255, 255))
-        screen.blit(play1, (490, 380))
-
-        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (290, 100)))  # screen, color, (x,y location), (size)
-        play1 = font2.render("Player1 vs Player2", True, (255, 255, 255))
-        screen.blit(play1, (420, 533))
-
-        # --------Chess Piece Color options------- #
-        # title = font4.render("Chess Pieces Color", True, p.Color("Brown"))
-        # screen.blit(title, (63, 500))
-        # title = font4.render("Chess Pieces Color", True, p.Color("White"))
-        # screen.blit(title, (60, 500))
-        # title = font5.render("White (Default)", True, p.Color("White"))
-        # screen.blit(title, (80, 545))
-        # p.draw.rect(screen, p.Color("#d0d2c7"), ((70, 580), (150, 60)))  # screen, color, (x,y location), (size)
-        # play2 = font5.render("Black piece", True, p.Color("Black"))
-        # screen.blit(play2, (77, 595))
-        #
-        # p.draw.rect(screen, p.Color("#d0d2c7"), ((70, 660), (150, 60)))  # screen, color, (x,y location), (size)
-        # play2 = font5.render("Gold piece", True, p.Color("#D4AF37"))
-        # screen.blit(play2, (77, 675))
-
-        for event in p.event.get():
-            if event.type == p.QUIT:
-                sys.exit()
-            elif event.type == p.MOUSEBUTTONDOWN and event.button == 3:
-                main_menu()
-            elif event.type == p.KEYDOWN and p.K_ESCAPE:
-                main_menu()
-
-            elif event.type == p.MOUSEBUTTONDOWN and event.button == 1:
-                x, y = event.pos
-                if 415 <= x <= 685 and 200 <= y <= 300:
-                    playerOne = True  # If a Human is playing white, then this will be True.
-                    playerTwo = False  # If AI is playing, then this will be False
-                    main()
-
-                if 415 <= x <= 685 and 350 <= y <= 450:
-                    playerOne = False  # If a Human is playing white, then this will be True.
-                    playerTwo = False  # If AI is playing, then this will be False
-                    main()
-
-                if 410 <= x <= 700 and 500 <= y <= 600:
-                    playerOne = True  # If a Human is playing white, then this will be True.
-                    playerTwo = True  # If AI is playing, then this will be False
-                    main()
-
         p.display.update()
 
 

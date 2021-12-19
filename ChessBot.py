@@ -8,7 +8,8 @@ knightScores = [[1, 1, 1, 1, 1, 1, 1, 1],
                 [1, 2, 3, 3, 3, 3, 2, 1],
                 [1, 2, 3, 4, 4, 3, 2, 1],  # The Knight at the center of the board is better than being position
                 [1, 2, 3, 4, 4, 3, 2, 1],  # outside of the board, since it can reach more squares.
-                [1, 2, 3, 3, 3, 3, 2, 1],  # AI will consider the higher value as a better move. Because it can attack more squares
+                [1, 2, 3, 3, 3, 3, 2, 1],
+                # AI will consider the higher value as a better move. Because it can attack more squares
                 [1, 2, 2, 2, 2, 2, 2, 1],
                 [1, 1, 1, 1, 1, 1, 1, 1]]
 
@@ -75,48 +76,51 @@ def findRandomMove(validMoves):
 
 """
 Function to find the move based on the list of valid moves
+# Simple Algorithm, works with scoreMaterial. not in use anymore...
+"""
+
+# def findBestMoveMinMaxNoRecursion(game_state, validMoves):
+#     turnMultiplier = 1 if game_state.whiteToMove else -1  # for allowing AI to play as any color
+#     playerMaxScore = -CHECKMATE  # as AI is playing Black this is the worst possible score -> AI will start from worst and try to improve
+#     bestMove = None
+#     random.shuffle(validMoves)
+#     for playerMove in validMoves:  # not assigning colors so AI can play as both: playerMove -> move of the current player || opponentMove -> opponent's move
+#         game_state.makeMove(playerMove)
+#         opponentMinScore = CHECKMATE
+#         opponentMoves = game_state.getValidMoves()
+#         if game_state.checkmate:
+#             game_state.undoMove()
+#             return playerMove
+#         elif game_state.stalemate:
+#             opponentMinScore = STALEMATE
+#         else:
+#             for opponentMove in opponentMoves:
+#                 game_state.makeMove(opponentMove)
+#                 game_state.getValidMoves()
+#                 if game_state.checkmate:
+#                     score = -CHECKMATE
+#                 elif game_state.stalemate:
+#                     score = STALEMATE
+#                 else:
+#                     score = turnMultiplier * scoreMaterial(game_state.board)
+#                 if score < opponentMinScore:
+#                     opponentMinScore = score
+#                 game_state.undoMove()
+#         if playerMaxScore < opponentMinScore:
+#             playerMaxScore = opponentMinScore
+#             bestMove = playerMove
+#         game_state.undoMove()
+#         return bestMove
+
+
+"""
+Helper method to call recursion for the 1st time into ChessMain
 """
 
 
-# Simple Algorithm, not in use anymore...
-def findBestMoveMinMaxNoRecursion(game_state, validMoves):
-    turnMultiplier = 1 if game_state.whiteToMove else -1  # for allowing AI to play as any color
-    playerMaxScore = -CHECKMATE  # as AI is playing Black this is the worst possible score -> AI will start from worst and try to improve
-    bestMove = None
-    random.shuffle(validMoves)
-    for playerMove in validMoves:  # not assigning colors so AI can play as both: playerMove -> move of the current player || opponentMove -> opponent's move
-        game_state.makeMove(playerMove)
-        opponentMinScore = CHECKMATE
-        opponentMoves = game_state.getValidMoves()
-        if game_state.checkmate:
-            game_state.undoMove()
-            return playerMove
-        elif game_state.stalemate:
-            opponentMinScore = STALEMATE
-        else:
-            for opponentMove in opponentMoves:
-                game_state.makeMove(opponentMove)
-                game_state.getValidMoves()
-                if game_state.checkmate:
-                    score = -CHECKMATE
-                elif game_state.stalemate:
-                    score = STALEMATE
-                else:
-                    score = turnMultiplier * scoreMaterial(game_state.board)
-                if score < opponentMinScore:
-                    opponentMinScore = score
-                game_state.undoMove()
-        if playerMaxScore < opponentMinScore:
-            playerMaxScore = opponentMinScore
-            bestMove = playerMove
-        game_state.undoMove()
-        return bestMove
-
-
-"""
-Helper method to call recursion for the 1st time
-"""
-
+# Easy/fast = findMoveNegaMaxAlphaBeta + scoreBoard
+# Medium = findMoveMinMax
+# Hard = findMoveNegaMaxAlphaBeta + scoreBoardAdvanced
 
 def findBestMove(game_state, validMoves):
     global nextMove, counter
@@ -126,8 +130,35 @@ def findBestMove(game_state, validMoves):
     findMoveNegaMaxAlphaBeta(game_state, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if game_state.whiteToMove else -1)  # For using Nega Max Algorithm with Alpha Beta Pruning
     # findMoveNegaMax(game_state, validMoves, DEPTH, 1 if game_state.whiteToMove else -1)     # For using Nega Max Algorithm
     # findMoveMinMax(game_state, validMoves, DEPTH, game_state.whiteToMove)     # For using Min-Max Algorithm
-
+    print("AI Processing...")
     print(counter)
+    print("Easy")
+    return nextMove
+
+
+def findBestMoveMedium(game_state, validMoves):
+    global nextMove, counter
+    nextMove = None
+    random.shuffle(validMoves)
+    counter = 0
+
+    findMoveMinMax(game_state, validMoves, DEPTH, game_state.whiteToMove)     # For using Min-Max Algorithm
+    print("AI Processing...")
+    print(counter)
+    print("medium")
+    return nextMove
+
+
+def findBestMoveHard(game_state, validMoves):
+    global nextMove, counter
+    nextMove = None
+    random.shuffle(validMoves)
+    counter = 0
+
+    findMoveNegaMaxAlphaBetaAdvance(game_state, validMoves, DEPTH, -CHECKMATE, CHECKMATE, 1 if game_state.whiteToMove else -1)  # For using Nega Max Algorithm with Alpha Beta Pruning
+    print("AI Processing...")
+    print(counter)
+    print("hard")
     return nextMove
 
 
@@ -173,27 +204,27 @@ def findMoveMinMax(game_state, validMoves, depth, whiteToMove):
 # findbestmoveMinMaxNoRecursion can go only in depth 1, but with this method. The algorithm can now look as many moves ahead as we want since we've set the depth parameters
 
 """
-Best Move Calculator using NegaMax Algorithm
+Move Calculator using NegaMax Algorithm
 """
 
-
-def findMoveNegaMax(game_state, validMoves, depth, turnMultiplier):
-    global nextMove, counter
-    counter += 1
-    if depth == 0:
-        return turnMultiplier * scoreBoard(game_state)
-
-    maxScore = -CHECKMATE
-    for move in validMoves:
-        game_state.makeMove(move)
-        nextMoves = game_state.getValidMoves()
-        score = -findMoveNegaMax(game_state, nextMoves, depth - 1, -turnMultiplier)  # negative for NEGA Max
-        if score > maxScore:
-            maxScore = score
-            if depth == DEPTH:
-                nextMove = move
-        game_state.undoMove()
-    return maxScore
+# def findMoveNegaMax(game_state, validMoves, depth, turnMultiplier):
+#     global nextMove, counter
+#     # DEPTH = 2
+#     counter += 1
+#     if depth == 0:
+#         return turnMultiplier * scoreBoard(game_state)
+#
+#     maxScore = -CHECKMATE
+#     for move in validMoves:
+#         game_state.makeMove(move)
+#         nextMoves = game_state.getValidMoves()
+#         score = -findMoveNegaMax(game_state, nextMoves, depth - 1, -turnMultiplier)  # negative for NEGA Max
+#         if score > maxScore:
+#             maxScore = score
+#             if depth == DEPTH:
+#                 nextMove = move
+#         game_state.undoMove()
+#     return maxScore
 
 
 """
@@ -212,7 +243,33 @@ def findMoveNegaMaxAlphaBeta(game_state, validMoves, depth, alpha, beta, turnMul
     for move in validMoves:
         game_state.makeMove(move)
         nextMoves = game_state.getValidMoves()
-        score = -findMoveNegaMaxAlphaBeta(game_state, nextMoves, depth - 1, -beta, -alpha, -turnMultiplier)  # negative for NEGA Max
+        score = -findMoveNegaMaxAlphaBeta(game_state, nextMoves, depth - 1, -beta, -alpha,
+                                          -turnMultiplier)  # negative for NEGA Max
+        if score > maxScore:
+            maxScore = score
+            if depth == DEPTH:
+                nextMove = move
+        game_state.undoMove()
+        if maxScore > alpha:  # pruning happens
+            alpha = maxScore
+        if alpha >= beta:
+            break
+    return maxScore
+
+# based on piecePositionScores
+def findMoveNegaMaxAlphaBetaAdvance(game_state, validMoves, depth, alpha, beta, turnMultiplier):
+    global nextMove, counter
+    counter += 1
+    if depth == 0:
+        return turnMultiplier * scoreBoardAdvanced(game_state)
+
+    # Move ordering - implement later
+    maxScore = -CHECKMATE
+    for move in validMoves:
+        game_state.makeMove(move)
+        nextMoves = game_state.getValidMoves()
+        score = -findMoveNegaMaxAlphaBeta(game_state, nextMoves, depth - 1, -beta, -alpha,
+                                          -turnMultiplier)  # negative for NEGA Max
         if score > maxScore:
             maxScore = score
             if depth == DEPTH:
@@ -230,11 +287,12 @@ better scoring algorithm with considering checks and stalemates.
 + positive score is good for white, - negative score is good for black ( when Human = White & AI = Black)
 """
 
+
 # ----- AI scoring basic(works with every algorithms / fast) -----#
 def scoreBoard(game_state):
     if game_state.checkmate:
         if game_state.whiteToMove:
-            return -CHECKMATE   # BLACK WINS
+            return -CHECKMATE  # BLACK WINS
         else:
             return CHECKMATE
     if game_state.stalemate:
@@ -249,35 +307,36 @@ def scoreBoard(game_state):
                 score -= pieceScore[square[1]]
     return score
 
+
 # ----- AI scoring for NegaMax & NegaMaxBeta, smarter algorithm (Involved piecePositionScores) -----#
-# def scoreBoard(game_state):
-#     if game_state.checkmate:
-#         if game_state.whiteToMove:
-#             return -CHECKMATE  # Black wins
-#         else:
-#             return CHECKMATE  # White wins
-#     if game_state.stalemate:
-#         return STALEMATE
-#
-#     score = 0
-#     for row in range(len(game_state.board)):  # len = 8
-#         for col in range(len(game_state.board[row])):
-#             square = game_state.board[row][col]
-#             if square != "--":
-#                 # score it positionally based on what type of piece it is
-#                 piecePositionScore = 0
-#                 if square[1] != "K":  # no position table for king
-#                     if square[1] == "p":  # for pawns
-#                         piecePositionScore = piecePositionScores[square][row][col]
-#                     else:  # for other pieces
-#                         piecePositionScore = piecePositionScores[square[1]][row][col]
-#
-#                 if square[0] == "w":
-#                     score += pieceScore[square[1]] + piecePositionScore * 0.1  # 0.1 to make the game less positional
-#                 elif square[0] == "b":
-#                     score -= pieceScore[square[1]] + piecePositionScore * 0.1
-#
-#     return score
+def scoreBoardAdvanced(game_state):
+    if game_state.checkmate:
+        if game_state.whiteToMove:
+            return -CHECKMATE  # Black wins
+        else:
+            return CHECKMATE  # White wins
+    if game_state.stalemate:
+        return STALEMATE
+
+    score = 0
+    for row in range(len(game_state.board)):  # len = 8
+        for col in range(len(game_state.board[row])):
+            square = game_state.board[row][col]
+            if square != "--":
+                # score it positionally based on what type of piece it is
+                piecePositionScore = 0
+                if square[1] != "K":  # no position table for king
+                    if square[1] == "p":  # for pawns
+                        piecePositionScore = piecePositionScores[square][row][col]
+                    else:  # for other pieces
+                        piecePositionScore = piecePositionScores[square[1]][row][col]
+
+                if square[0] == "w":
+                    score += pieceScore[square[1]] + piecePositionScore * 0.1  # 0.1 to make the game less positional
+                elif square[0] == "b":
+                    score -= pieceScore[square[1]] + piecePositionScore * 0.1
+
+    return score
 
 
 """
