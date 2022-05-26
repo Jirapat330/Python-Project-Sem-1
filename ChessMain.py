@@ -27,7 +27,7 @@ font5 = p.font.SysFont("Helvetica", 23, True, False)
 moveLogFont = p.font.SysFont("Arial", 12, True, False)
 
 ############# Main Chess ui : Display screen #################
-screen = p.display.set_mode((1060, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
+screen = p.display.set_mode((1091, HEIGHT))  # (0,0) top left >>> (1000,800) bottom right
 p.display.set_caption("|ChessM8| Checkmate Chess beta 1.0_by: Jirapat_Wongjaroenrat")
 clock = p.time.Clock()
 
@@ -117,11 +117,11 @@ def main():
 
     # -------On-Screen GameMode Label----------- #
     if playerOne and not playerTwo:
-        gameModeLabel("Player 1 VS AI")
+        gameModeLabel("Player1  VS  AI")
     elif playerOne and playerTwo:
-        gameModeLabel("Player 1 VS Player 2")
+        gameModeLabel("Player1 VS Player2")
     else:
-        gameModeLabel("AI VS AI")
+        gameModeLabel("AI  VS  AI")
 
     ############# Game driver : Don't touch ##############
     while running:
@@ -305,7 +305,7 @@ Draw Move Log
 
 
 def drawMoveLog(game_state):
-    moveLogRect = p.Rect(WIDTH, 200, 260, 550)
+    moveLogRect = p.Rect(WIDTH, 200, 290, 550)
     p.draw.rect(screen, p.Color("brown"), moveLogRect)
     moveLog = game_state.moveLog
     moveTexts = []
@@ -391,11 +391,11 @@ def drawEndGameText(text):
 def gameModeLabel(text):
     mode = p.font.SysFont("Arial", 18, True, False)
     textObject3 = mode.render("||-GameMode-||", True, p.Color("Black"))
-    screen.blit(textObject3, (850, 750))
+    screen.blit(textObject3, (880, 750))
 
-    label = p.font.SysFont("Arial", 15, True, False)
+    label = p.font.SysFont("Arial", 16, True, False)
     textObject4 = label.render(text, True, p.Color("Brown"))
-    screen.blit(textObject4, (860, 780))
+    screen.blit(textObject4, (880, 780))
 
 
 # if __name__ == "__main__":
@@ -427,7 +427,7 @@ def AiDifficulty():
         play1 = font2.render("Intermediate", True, (255, 255, 255))
         screen.blit(play1, (470, 380))
 
-        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (290, 100)))  # screen, color, (x,y location), (size)
+        p.draw.rect(screen, p.Color("#fc9003"), ((415, 500), (270, 100)))  # screen, color, (x,y location), (size)
         play1 = font2.render("Expert", True, (255, 255, 255))
         screen.blit(play1, (470, 533))
 
@@ -485,7 +485,7 @@ def game_mode():
         play1 = font2.render("AI vs AI", True, (255, 255, 255))
         screen.blit(play1, (490, 380))
 
-        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (290, 100)))  # screen, color, (x,y location), (size)
+        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (300, 100)))  # screen, color, (x,y location), (size)
         play1 = font2.render("Player1 vs Player2", True, (255, 255, 255))
         screen.blit(play1, (420, 533))
 
@@ -560,7 +560,7 @@ def color_options():
         p.draw.rect(screen, p.Color("#fc9003"), ((415, 350), (270, 100)))  # screen, color, (x,y location), (size)
         play1 = font2.render("AI vs AI", True, (255, 255, 255))
         screen.blit(play1, (490, 380))
-        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (290, 100)))  # screen, color, (x,y location), (size)
+        p.draw.rect(screen, p.Color("#fc9003"), ((405, 500), (300, 100)))  # screen, color, (x,y location), (size)
         play1 = font2.render("Player1 vs Player2", True, (255, 255, 255))
         screen.blit(play1, (420, 533))
 
